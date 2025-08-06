@@ -34,8 +34,6 @@ Data: 501 points, 2022-01-03 to 2023-12-29 (2y)
 MACD params: 10, 20, 7
 Signals: 38 buy, 36 sell
 
-PERFORMANCE RESULTS
-=============================
 Total Return:        16.44%
 Annualized Return:    7.96%
 Sharpe Ratio:          0.79
