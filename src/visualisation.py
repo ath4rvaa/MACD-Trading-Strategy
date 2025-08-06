@@ -1,6 +1,5 @@
 """
 Visualization Module
-Creates charts and plots for MACD strategy analysis
 """
 
 import matplotlib.pyplot as plt
@@ -10,21 +9,12 @@ import numpy as np
 from typing import Dict, List
 import seaborn as sns
 
-# Set style for better-looking plots
 plt.style.use('seaborn-v0_8')
 sns.set_palette("husl")
 
 
 class MACDVisualiser:
-    """Handles all visualisation for MACD strategy analysis"""
-    
     def __init__(self, figsize: tuple = (15, 10)):
-        """
-        Initialize visualiser
-        
-        Args:
-            figsize: Figure size for plots
-        """
         self.figsize = figsize
     
     def plot_macd_chart(self, data: pd.DataFrame, macd_data: pd.DataFrame, 
@@ -32,24 +22,37 @@ class MACDVisualiser:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=self.figsize, 
                                       gridspec_kw={'height_ratios': [2, 1]})
         
-        # Plot 1: Price and signals
         ax1.plot(data.index, data['Close'], label='Close Price', linewidth=1.5, color='black')
         
-        # Add buy/sell signals
-        buy_signals = signals[signals['signal'] == 1]
-        sell_signals = signals[signals['signal'] == -1]
-        
-        ax1.scatter(buy_signals.index, data.loc[buy_signals.index, 'Close'], 
-                   marker='^', color='green', s=100, label='Buy Signal', zorder=5)
-        ax1.scatter(sell_signals.index, data.loc[sell_signals.index, 'Close'], 
-                   marker='v', color='red', s=100, label='Sell Signal', zorder=5)
+        if 'enhanced_signal' in signals.columns:
+            strong_buy_signals = signals[signals['enhanced_signal'] == 1]
+            strong_sell_signals = signals[signals['enhanced_signal'] == -1]
+            weak_buy_signals = signals[signals['enhanced_signal'] == 0.5]
+            weak_sell_signals = signals[signals['enhanced_signal'] == -0.5]
+            
+            ax1.scatter(strong_buy_signals.index, data.loc[strong_buy_signals.index, 'Close'], 
+                       marker='^', color='green', s=150, label='Strong Buy', zorder=5)
+            ax1.scatter(strong_sell_signals.index, data.loc[strong_sell_signals.index, 'Close'], 
+                       marker='v', color='red', s=150, label='Strong Sell', zorder=5)
+            
+            ax1.scatter(weak_buy_signals.index, data.loc[weak_buy_signals.index, 'Close'], 
+                       marker='^', color='lightgreen', s=100, label='Weak Buy', zorder=4)
+            ax1.scatter(weak_sell_signals.index, data.loc[weak_sell_signals.index, 'Close'], 
+                       marker='v', color='lightcoral', s=100, label='Weak Sell', zorder=4)
+        else:
+            buy_signals = signals[signals['signal'] == 1]
+            sell_signals = signals[signals['signal'] == -1]
+            
+            ax1.scatter(buy_signals.index, data.loc[buy_signals.index, 'Close'], 
+                       marker='^', color='green', s=100, label='Buy Signal', zorder=5)
+            ax1.scatter(sell_signals.index, data.loc[sell_signals.index, 'Close'], 
+                       marker='v', color='red', s=100, label='Sell Signal', zorder=5)
         
         ax1.set_title(f'{title} - Price Chart with Signals', fontsize=14, fontweight='bold')
         ax1.set_ylabel('Price ($)', fontsize=12)
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
-        # Plot 2: MACD Line and Signal Line
         ax2.plot(macd_data.index, macd_data['macd_line'], label='MACD Line', linewidth=1.5)
         ax2.plot(macd_data.index, macd_data['signal_line'], label='Signal Line', linewidth=1.5)
         ax2.axhline(y=0, color='black', linestyle='--', alpha=0.5)
@@ -58,7 +61,6 @@ class MACDVisualiser:
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
-        # Format x-axis
         for ax in [ax1, ax2]:
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
             ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
@@ -194,24 +196,4 @@ class MACDVisualiser:
 
 
 if __name__ == "__main__":
-    # Test the visualiser
-    from data_fetcher import DataFetcher
-    from strategy import MACDStrategy
-    
-    # Get sample data
-    fetcher = DataFetcher()
-    data = fetcher.get_sample_data()
-    
-    # Generate MACD data and signals
-    strategy = MACDStrategy()
-    macd_data = strategy.calculate_macd(data['Close'])
-    signals = strategy.generate_signals(macd_data)
-    
-    # Create visualisations
-    visualiser = MACDVisualiser()
-    
-    # Plot MACD chart
-    fig1 = visualiser.plot_macd_chart(data, macd_data, signals)
-    plt.show()
-    
-    print("Visualization module test completed!") 
+    pass 

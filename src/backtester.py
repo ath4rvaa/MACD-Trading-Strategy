@@ -23,19 +23,8 @@ class Backtester:
         self.positions = []
     
     def run_backtest(self, data: pd.DataFrame, signals: pd.Series) -> Dict:
-        """
-        Run backtest simulation
-        
-        Args:
-            data: DataFrame with price data
-            signals: Series with trading signals (1: buy, -1: sell, 0: hold)
-            
-        Returns:
-            Dictionary with backtest results and metrics
-        """
         self.reset()
         
-        # Initialise tracking arrays
         portfolio_values = []
         positions = []
         trades = []
@@ -44,18 +33,19 @@ class Backtester:
             price = row['Close']
             signal = signals.iloc[i] if i < len(signals) else 0
             
-            # Execute trades based on signals
-            if signal == 1 and self.position == 0:  # Buy signal
+            if signal >= 1 and self.position == 0:
                 self._execute_buy(date, price, trades)
-            elif signal == -1 and self.position > 0:  # Sell signal
+            elif signal <= -1 and self.position > 0:
+                self._execute_sell(date, price, trades)
+            elif signal == 0.5 and self.position == 0:
+                self._execute_buy(date, price, trades)
+            elif signal == -0.5 and self.position > 0:
                 self._execute_sell(date, price, trades)
             
-            # Calculate current portfolio value
             current_value = self.capital + (self.position * price)
             portfolio_values.append(current_value)
             positions.append(self.position)
         
-        # Create results DataFrame
         results_df = pd.DataFrame({
             'date': data.index,
             'price': data['Close'],
@@ -64,7 +54,6 @@ class Backtester:
             'portfolio_value': portfolio_values
         })
         
-        # Calculate performance metrics
         metrics = self._calculate_metrics(results_df, trades)
         
         return {
@@ -104,15 +93,7 @@ class Backtester:
             self.position = 0
     
     def _calculate_metrics(self, results_df: pd.DataFrame, trades: List) -> Dict:
-        """
-        Calculate performance metrics
-        
-        Args:
-            results_df: DataFrame with backtest results
-            
-        Returns:
-            Dictionary with performance metrics
-        """
+
         # Calculate returns
         results_df['returns'] = results_df['portfolio_value'].pct_change()
         
@@ -124,10 +105,11 @@ class Backtester:
         annualized_return = ((1 + total_return) ** (365 / days)) - 1 if days > 0 else 0
         
         # Volatility
-        volatility = results_df['returns'].std() * np.sqrt(252)  # Annualized
+        volatility = results_df['returns'].std() * np.sqrt(252)
         
-        # Sharpe ratio (assuming risk-free rate of 0)
-        sharpe_ratio = annualized_return / volatility if volatility > 0 else 0
+        # Sharpe ratio (using current US risk-free rate of 4.22%)
+        risk_free_rate = 0.0422
+        sharpe_ratio = (annualized_return - risk_free_rate) / volatility if volatility > 0 else 0
         
         # Maximum drawdown
         cumulative_returns = (1 + results_df['returns']).cumprod()
@@ -174,28 +156,4 @@ class Backtester:
 
 
 if __name__ == "__main__":
-    # Test the backtester
-    from data_fetcher import DataFetcher
-    from strategy import MACDStrategy
-    
-    # Get sample data
-    fetcher = DataFetcher()
-    data = fetcher.get_sample_data()
-    
-    # Generate signals
-    strategy = MACDStrategy()
-    macd_data = strategy.calculate_macd(data['Close'])
-    signals = strategy.generate_signals(macd_data)
-    
-    # Run backtest
-    backtester = Backtester(initial_capital=100000)
-    results = backtester.run_backtest(data, signals['signal'])
-    
-    print("Backtest Results:")
-    print(f"Total Return: {results['metrics']['total_return']:.2%}")
-    print(f"Annualised Return: {results['metrics']['annualized_return']:.2%}")
-    print(f"Sharpe Ratio: {results['metrics']['sharpe_ratio']:.2f}")
-    print(f"Max Drawdown: {results['metrics']['max_drawdown']:.2%}")
-    print(f"Number of Trades: {results['metrics']['num_trades']}")
-    print(f"Win Rate: {results['metrics']['win_rate']:.2%}")
-    print(f"Final Portfolio Value: ${results['metrics']['final_value']:,.2f}") 
+    pass 

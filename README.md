@@ -12,7 +12,7 @@ MACD/
 │   ├── data_fetcher.py    # Fetch and preprocess market data
 │   ├── strategy.py        # MACD calculations and signal generation
 │   ├── backtester.py      # Backtesting engine and performance metrics
-│   ├── visualization.py   # Chart plotting and analysis
+│   ├── visualisation.py   # Chart plotting and analysis
 │   └── main.py           # Main execution script
 ├── requirements.txt       # Python dependencies
 └── README.md             # This
@@ -20,6 +20,45 @@ MACD/
 ```
 
 ## My Thoughts
+### **1st commit**
+- Note: default values for MACD parameters are as such for now: 
+    Fast period: 10
+    Slow period: 20
+    Signal time: 7
+- These are definitely more aggresive comapred to the standard 12, 26, 9 respectively. I used this because I tested this strategy across a shorter and more volatile two year period from 2022-2024.
+- The reduced parameters generate signals faster, potentially capturing more short-term opportunities in trending phases. However, this also increases the risk of over-sensitivity and a greater chance of false signals.
+- Compared to the buy and hold strategy, the MACD strategy with aggressive parameters was able to outperform it over the testing period.
+- RFR was taken as 0% here
+
+Data: 501 points, 2022-01-03 to 2023-12-29 (2y)
+MACD params: 10, 20, 7
+Signals: 38 buy, 36 sell
+
+PERFORMANCE RESULTS
+=============================
+Total Return:        16.44%
+Annualized Return:    7.96%
+Sharpe Ratio:          0.79
+Max Drawdown:       -10.40%
+Trades:                   8
+Win Rate:            62.50%
+Final Value:       $ 116,435
+
+### **2nd commit - stochastic oscillators filtering addition**
+Added in stochastic oscillator to help filter out false MACD signals. Parameters were set to default, so 12 26 9 for MACD and 14 3 for stochastic oscillator. Tested this combined strategy using AAPL stock data from yfinance, from 2019-2024. Using US Risk free Rate 4.22% as well, for sharpe ratio calculation.
+
+**Testing Results:**
+- **1-year (2023)**: +5.55% return, 6 trades, 33.33% win rate, Sharpe: 0.18
+- **2-year (2022-2024)**: -3.07% return, 11 trades, 36.36% win rate, Sharpe: -0.50
+- **5-year (2019-2024)**: +13.66% return, 7 trades, 57.14% win rate, Sharpe: -0.18
+
+**Insights:**
+- Strategy underperformed buy & hold across all time periods tested
+- In strong trending markets (2019-2024), buy & hold (+408%) significantly outperformed the strategy (+13.66%)
+- The combination likely works better in volatile/sideways markets but struggles in trending markets
+- Risk-adjusted performance: Only the 1-year period (2023) showed positive Sharpe ratio (0.18), while 2-year and 5-year periods had negative Sharpe ratios due to underperformance vs 4.22% risk-free rate
+- Trading frequency: 2-year period had the most trades (11), suggesting higher volatility and more signal generation
+- Drawdown analysis: 1-year period had lowest max drawdown (-6.59%), while 2-year period had highest (-16.69%)
 
 
 ## Files Used
@@ -31,13 +70,21 @@ MACD/
 ### strategy.py
 - Implements MACD calculations and generate trading signals. 
 - MACD strategy consists of using the difference between short-term and long-term EMAs (Exponential Moving Averages) to generate a MACD line (by deducting long EMA from short EMA), and a signal line (e.g., 9-period EMA), with a histogram showing their divergence for momentum insights. Traders buy on bullish crossovers (MACD above signal) or positive divergences (price is trending down but MACD is trending up), and sell on bearish crossovers (vice versa) or negative shifts.
+- added a stochastic oscillator filter in order to help to filter out false MACD signals that occur in choppy markets, to ensure better entry/exit timings
+
+**Enhanced Signal System: (with addition of stochastic oscillator)**
+- **Strong Buy (1)**: MACD bullish + Stochastic oversold confirmation within 3 days
+- **Strong Sell (-1)**: MACD bearish + Stochastic overbought confirmation within 3 days  
+- **Weak Buy (0.5)**: MACD bullish but no Stochastic confirmation
+- **Weak Sell (-0.5)**: MACD bearish but no Stochastic confirmation
+- **No Signal (0)**: When indicators disagree or no clear direction
 
 
 ### backtester.py
 -  Simulates trading strategy and calculate performance metrics. It executes trades, track position and calculate returns, Sharpe ratio and drawdown.
 
 
-### visualization.py
+### visualisation.py
 - Used for creating charts and visualisations for analysis of performance. 
 - 2 charts are created. Fig 1 shows the buy and sell signals and the MACD chart. Fig 2 shows buy-and-hold strategy compared against the MACD strategy, and a comparison in portfolio value over time.
 
@@ -59,25 +106,3 @@ pip install -r requirements.txt
 python src/main.py
 ```
 
-- Note: default values for MACD parameters are as such: 
-    Fast period: 10
-    Slow period: 20
-    Signal time: 7
-- These are definitely more aggresive comapred to the standard 12, 26, 9 respectively. I used this because I tested this strategy across a shorter and more volatile two year period from 2022-2024.
-- The reduced parameters generate signals faster, potentially capturing more short-term opportunities in trending phases. However, this also increases the risk of over-sensitivity and a greater chance of false signals.
-- Compared to the buy and hold strategy, the MACD strategy with aggressive parameters was able to outperform it over the testing period.
-
-
-Data: 501 points, 2022-01-03 to 2023-12-29 (2y)
-MACD params: 10, 20, 7
-Signals: 38 buy, 36 sell
-
-PERFORMANCE RESULTS
-=============================
-Total Return:        16.44%
-Annualized Return:    7.96%
-Sharpe Ratio:          0.79
-Max Drawdown:       -10.40%
-Trades:                   8
-Win Rate:            62.50%
-Final Value:       $ 116,435
