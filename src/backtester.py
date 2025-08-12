@@ -64,7 +64,8 @@ class Backtester:
     
     def _execute_buy(self, date, price, trades):
         """Execute buy order"""
-        shares = int(self.capital / price)
+        # Calculate shares accounting for commission
+        shares = int(self.capital / (price * (1 + self.commission)))
         if shares > 0:
             cost = shares * price * (1 + self.commission)
             if cost <= self.capital:

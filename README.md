@@ -58,6 +58,36 @@ Added in stochastic oscillator to help filter out false MACD signals. Parameters
 - Trading frequency: 2-year period had the most trades (11), suggesting higher volatility and more signal generation
 - Drawdown analysis: 1-year period had lowest max drawdown (-6.59%), while 2-year period had highest (-16.69%)
 
+### **3rd commit - removal of weak signals**
+Removed weak signals (0.5 and -0.5) from the strategy to focus only on strong, confirmed signals. This change simplifies the signal system to only execute trades when both MACD and Stochastic oscillator are in agreement, potentially reducing false signals and improving trade quality.
+
+**Updated Signal System:**
+- **Strong Buy (1)**: MACD bullish + Stochastic oversold confirmation within 3 days
+- **Strong Sell (-1)**: MACD bearish + Stochastic overbought confirmation within 3 days  
+- **No Signal (0)**: When indicators disagree or no clear direction
+
+This modification aimed to improve the strategy's performance by eliminating potentially low-quality trades that occur when only one indicator is signaling while the other remains neutral, and it was successful. Fewer trades were executed due to stricter requirements.
+
+**Parameter Adjustment:**
+After the 2nd commit, MACD parameters were changed from the standard 12,26,9 to more aggressive 8,21,5. This adjustment was made to:
+- Generate signals more frequently in the current market environment
+- Better capture short-term momentum shifts
+- Adapt to the more volatile market conditions post-2020
+- The faster parameters (8,21,5) are more responsive compared to traditional (12,26,9)
+
+**Results after weak signal removal (with 8,21,5 parameters):**
+- **1-year (2023)**: +16.78% return, 2 trades, 100.00% win rate, Sharpe: 1.00
+- **2-year (2022-2024)**: +27.12% return, 3 trades, 100.00% win rate, Sharpe: 0.38
+- **5-year (2019-2024)**: +50.69% return, 5 trades, 100.00% win rate, Sharpe: 0.28
+
+**Key improvements:**
+- **Reduced trading frequency**: Fewer trades executed due to stricter signal requirements
+- **Improved signal quality**: Only trades with strong confirmation from both indicators
+- **Better risk-adjusted returns**: All periods now show positive Sharpe ratios
+- **Strategy refinement**: More conservative approach prioritizing quality over quantity
+
+The combination of removing weak signals and using more aggressive MACD parameters (8,21,5) created a more selective yet responsive trading strategy that waits for stronger confirmation before entering positions, leading to improved risk-adjusted returns across all time periods tested.
+
 
 ## Files Used
 
@@ -69,14 +99,6 @@ Added in stochastic oscillator to help filter out false MACD signals. Parameters
 - Implements MACD calculations and generate trading signals. 
 - MACD strategy consists of using the difference between short-term and long-term EMAs (Exponential Moving Averages) to generate a MACD line (by deducting long EMA from short EMA), and a signal line (e.g., 9-period EMA), with a histogram showing their divergence for momentum insights. Traders buy on bullish crossovers (MACD above signal) or positive divergences (price is trending down but MACD is trending up), and sell on bearish crossovers (vice versa) or negative shifts.
 - added a stochastic oscillator filter in order to help to filter out false MACD signals that occur in choppy markets, to ensure better entry/exit timings
-
-**Enhanced Signal System: (with addition of stochastic oscillator)**
-- **Strong Buy (1)**: MACD bullish + Stochastic oversold confirmation within 3 days
-- **Strong Sell (-1)**: MACD bearish + Stochastic overbought confirmation within 3 days  
-- **Weak Buy (0.5)**: MACD bullish but no Stochastic confirmation
-- **Weak Sell (-0.5)**: MACD bearish but no Stochastic confirmation
-- **No Signal (0)**: When indicators disagree or no clear direction
-
 
 ### backtester.py
 -  Simulates trading strategy and calculate performance metrics. It executes trades, track position and calculate returns, Sharpe ratio and drawdown.

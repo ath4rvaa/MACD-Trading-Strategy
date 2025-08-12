@@ -56,7 +56,7 @@ def main():
     print(f"MACD params: {args.fast_period}, {args.slow_period}, {args.signal_period}")
     print(f"Stochastic params: {args.k_period}, {args.d_period}")
     print(f"Strong signals: {(enhanced_signals['enhanced_signal'] == 1).sum()} buy, {(enhanced_signals['enhanced_signal'] == -1).sum()} sell")
-    print(f"Weak signals: {(enhanced_signals['enhanced_signal'] == 0.5).sum()} buy, {(enhanced_signals['enhanced_signal'] == -0.5).sum()} sell")
+    print(f"Total signals: {(enhanced_signals['enhanced_signal'] != 0).sum()}")
     
     # Run backtest with enhanced signals
     backtester = Backtester(args.capital, args.commission)
@@ -77,7 +77,7 @@ def main():
     # Create visualizations
     visualiser = MACDVisualiser()
     
-    fig1 = visualiser.plot_macd_chart(data, macd_data, enhanced_signals, f"MACD - {args.symbol}")
+    fig1 = visualiser.plot_macd_chart(data, macd_data, enhanced_signals, results['trades'], f"MACD - {args.symbol}")
     fig2 = visualiser.plot_performance(results['results'], f"Performance - {args.symbol}")
     
     if args.save_plots:

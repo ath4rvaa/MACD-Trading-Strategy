@@ -73,8 +73,7 @@ class MACDStrategy:
                 
                 if stochastic_confirms > 0:
                     enhanced_signals.iloc[i, enhanced_signals.columns.get_loc('enhanced_signal')] = 1
-                else:
-                    enhanced_signals.iloc[i, enhanced_signals.columns.get_loc('enhanced_signal')] = 0.5
+                # Remove weak signal - only use strong signals
         
         for i in range(len(enhanced_signals)):
             if enhanced_signals.iloc[i]['macd_signal'] == -1:
@@ -84,8 +83,7 @@ class MACDStrategy:
                 
                 if stochastic_confirms < 0:
                     enhanced_signals.iloc[i, enhanced_signals.columns.get_loc('enhanced_signal')] = -1
-                else:
-                    enhanced_signals.iloc[i, enhanced_signals.columns.get_loc('enhanced_signal')] = -0.5
+                # Remove weak signal - only use strong signals
         
         return enhanced_signals
     

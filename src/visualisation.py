@@ -18,35 +18,46 @@ class MACDVisualiser:
         self.figsize = figsize
     
     def plot_macd_chart(self, data: pd.DataFrame, macd_data: pd.DataFrame, 
-                       signals: pd.DataFrame, title: str = "MACD Strategy Analysis"):
+                       signals: pd.DataFrame, trades: List = None, title: str = "MACD Strategy Analysis"):
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=self.figsize, 
                                       gridspec_kw={'height_ratios': [2, 1]})
         
         ax1.plot(data.index, data['Close'], label='Close Price', linewidth=1.5, color='black')
         
-        if 'enhanced_signal' in signals.columns:
-            strong_buy_signals = signals[signals['enhanced_signal'] == 1]
-            strong_sell_signals = signals[signals['enhanced_signal'] == -1]
-            weak_buy_signals = signals[signals['enhanced_signal'] == 0.5]
-            weak_sell_signals = signals[signals['enhanced_signal'] == -0.5]
+        # Plot executed trades if available
+        if trades:
+            buy_trades = [t for t in trades if t['action'] == 'BUY']
+            sell_trades = [t for t in trades if t['action'] == 'SELL']
             
-            ax1.scatter(strong_buy_signals.index, data.loc[strong_buy_signals.index, 'Close'], 
-                       marker='^', color='green', s=150, label='Strong Buy', zorder=5)
-            ax1.scatter(strong_sell_signals.index, data.loc[strong_sell_signals.index, 'Close'], 
-                       marker='v', color='red', s=150, label='Strong Sell', zorder=5)
+            if buy_trades:
+                buy_dates = [t['date'] for t in buy_trades]
+                buy_prices = [t['price'] for t in buy_trades]
+                ax1.scatter(buy_dates, buy_prices, marker='^', color='green', s=200, 
+                           label='Executed Buy', zorder=5, edgecolors='black', linewidth=1)
             
-            ax1.scatter(weak_buy_signals.index, data.loc[weak_buy_signals.index, 'Close'], 
-                       marker='^', color='lightgreen', s=100, label='Weak Buy', zorder=4)
-            ax1.scatter(weak_sell_signals.index, data.loc[weak_sell_signals.index, 'Close'], 
-                       marker='v', color='lightcoral', s=100, label='Weak Sell', zorder=4)
+            if sell_trades:
+                sell_dates = [t['date'] for t in sell_trades]
+                sell_prices = [t['price'] for t in sell_trades]
+                ax1.scatter(sell_dates, sell_prices, marker='v', color='red', s=200, 
+                           label='Executed Sell', zorder=5, edgecolors='black', linewidth=1)
         else:
-            buy_signals = signals[signals['signal'] == 1]
-            sell_signals = signals[signals['signal'] == -1]
-            
-            ax1.scatter(buy_signals.index, data.loc[buy_signals.index, 'Close'], 
-                       marker='^', color='green', s=100, label='Buy Signal', zorder=5)
-            ax1.scatter(sell_signals.index, data.loc[sell_signals.index, 'Close'], 
-                       marker='v', color='red', s=100, label='Sell Signal', zorder=5)
+            # Fallback to showing all signals if no trades data
+            if 'enhanced_signal' in signals.columns:
+                strong_buy_signals = signals[signals['enhanced_signal'] == 1]
+                strong_sell_signals = signals[signals['enhanced_signal'] == -1]
+                
+                ax1.scatter(strong_buy_signals.index, data.loc[strong_buy_signals.index, 'Close'], 
+                           marker='^', color='green', s=150, label='Strong Buy', zorder=5)
+                ax1.scatter(strong_sell_signals.index, data.loc[strong_sell_signals.index, 'Close'], 
+                           marker='v', color='red', s=150, label='Strong Sell', zorder=5)
+            else:
+                buy_signals = signals[signals['signal'] == 1]
+                sell_signals = signals[signals['signal'] == -1]
+                
+                ax1.scatter(buy_signals.index, data.loc[buy_signals.index, 'Close'], 
+                           marker='^', color='green', s=100, label='Buy Signal', zorder=5)
+                ax1.scatter(sell_signals.index, data.loc[sell_signals.index, 'Close'], 
+                           marker='v', color='red', s=100, label='Sell Signal', zorder=5)
         
         ax1.set_title(f'{title} - Price Chart with Signals', fontsize=14, fontweight='bold')
         ax1.set_ylabel('Price ($)', fontsize=12)
