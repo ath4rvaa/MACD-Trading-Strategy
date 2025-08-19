@@ -37,11 +37,7 @@ class Backtester:
                 self._execute_buy(date, price, trades)
             elif signal <= -1 and self.position > 0:
                 self._execute_sell(date, price, trades)
-            elif signal == 0.5 and self.position == 0:
-                self._execute_buy(date, price, trades)
-            elif signal == -0.5 and self.position > 0:
-                self._execute_sell(date, price, trades)
-            
+ 
             current_value = self.capital + (self.position * price)
             portfolio_values.append(current_value)
             positions.append(self.position)
@@ -103,14 +99,27 @@ class Backtester:
         
         # Annualised return
         days = (results_df['date'].iloc[-1] - results_df['date'].iloc[0]).days
-        annualized_return = ((1 + total_return) ** (365 / days)) - 1 if days > 0 else 0
+        annualised_return = ((1 + total_return) ** (365 / days)) - 1 if days > 0 else 0
         
-        # Volatility
-        volatility = results_df['returns'].std() * np.sqrt(252)
+        # Determine timeframe for proper annualisation
+        # Check if data is hourly by looking at time differences
+        if len(results_df) > 1:
+            time_diff = results_df['date'].iloc[1] - results_df['date'].iloc[0]
+            if time_diff.total_seconds() <= 3600:  # 1 hour or less
+                # For hourly data: 252 trading days * 6.5 trading hours = 1638 hours per year
+                annualisation_factor = 1638
+            else:
+                # For daily data: 252 trading days per year
+                annualisation_factor = 252
+        else:
+            annualisation_factor = 252  # Default to daily
+        
+        # Volatility (annualised)
+        volatility = results_df['returns'].std() * np.sqrt(annualisation_factor)
         
         # Sharpe ratio (using current US risk-free rate of 4.22%)
         risk_free_rate = 0.0422
-        sharpe_ratio = (annualized_return - risk_free_rate) / volatility if volatility > 0 else 0
+        sharpe_ratio = (annualised_return - risk_free_rate) / volatility if volatility > 0 else 0
         
         # Maximum drawdown
         cumulative_returns = (1 + results_df['returns']).cumprod()

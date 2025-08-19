@@ -88,11 +88,13 @@ After the 2nd commit, MACD parameters were changed from the standard 12,26,9 to 
 
 The combination of removing weak signals and using more aggressive MACD parameters (8,21,5) created a more selective yet responsive trading strategy that waits for stronger confirmation before entering positions, leading to improved risk-adjusted returns across all time periods tested.
 
+Commit 4: switched to Alpaca Trade API for hourly candles, improved performance and more trades
+
 
 ## Files Used
 
 ### data_fetcher.py
-- Fetches historical market data from Yahoo Finance. Used AAPL data from 2022-2023 for initial backtesting. Data is saved in the ../data folder.
+- Fetches historical market data from Alpaca Trade API (supports hourly, daily, and intraday data). Used AAPL data for backtesting with configurable timeframes. Data is saved in the ../data folder.
 
 
 ### strategy.py
@@ -120,9 +122,38 @@ The combination of removing weak signals and using more aggressive MACD paramete
 pip install -r requirements.txt
 ```
 
+## Alpaca API Setup
+
+This project uses Alpaca Trade API now (instead of yfinance)
+
+**Quick Setup:**
+1. Sign up at [https://alpaca.markets/](https://alpaca.markets/)
+2. Get your API keys from the dashboard
+3. Set environment variables:
+   ```bash
+   export ALPACA_API_KEY='your_api_key_here'
+   export ALPACA_SECRET_KEY='your_secret_key_here'
+   ```
+
 ## Usage
 
+### Basic Usage
 ```bash
 python src/main.py
 ```
+
+### Hourly Data Backtesting
+```bash
+python src/main.py --timeframe 1Day    # Daily data
+python src/main.py --timeframe 1Hour   # Hourly data
+python src/main.py --timeframe 15Min   # 15-minute data
+```
+
+### Available Timeframes
+- `1Min` - 1 minute bars
+- `5Min` - 5 minute bars  
+- `15Min` - 15 minute bars
+- `30Min` - 30 minute bars
+- `1Hour` - 1 hour bars
+- `1Day` - Daily bars
 
